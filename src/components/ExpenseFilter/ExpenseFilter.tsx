@@ -1,15 +1,19 @@
-import { ChangeEvent } from "react";
 import "./ExpenseFilter.css";
 
 interface ExpenseFilterProps {
   categories: string[];
-  onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  onChange: (category: string) => void;
 }
 
 function ExpenseFilter({ categories, onChange }: ExpenseFilterProps) {
   return (
     <>
-      <select onChange={onChange} className="expense-filter-select">
+      <select
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+        className="expense-filter-select"
+      >
         {categories.map((category) => {
           if (category == "All Categories")
             return (

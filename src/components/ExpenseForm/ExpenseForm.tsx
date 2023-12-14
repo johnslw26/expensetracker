@@ -1,37 +1,34 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FieldValues, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import "./ExpenseForm.css";
 
+const schema = z.object({
+  description: z.string().min(1, { message: "Description must not be empty" }),
+  amount: z
+    .number({ invalid_type_error: "Amount is required" })
+    .min(0.01, { message: "Amount must be greater than $0.01" }),
+  category: z.string().min(1, { message: "Category is required" }),
+});
+
+export type ExpenseFormData = z.infer<typeof schema>;
 interface ExpenseForm {
   categories: string[];
-  onUpdateItems: (data: FieldValues) => void;
+  onFormSubmit: (data: ExpenseFormData) => void;
 }
 
-function ExpenseForm({ categories, onUpdateItems }: ExpenseForm) {
-  const schema = z.object({
-    description: z
-      .string()
-      .min(1, { message: "Description must not be empty" }),
-    amount: z
-      .number({ invalid_type_error: "Amount is required" })
-      .min(0.01, { message: "Amount must be greater than $0.01" }),
-    category: z.string(),
-  });
-
-  type FormData = z.infer<typeof schema>;
-
+function ExpenseForm({ categories, onFormSubmit }: ExpenseForm) {
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isValid },
-  } = useForm<FormData>({
+  } = useForm<ExpenseFormData>({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = (data: FieldValues) => {
-    onUpdateItems(data);
+  const onSubmit = (data: ExpenseFormData) => {
+    onFormSubmit(data);
     reset();
   };
   return (
@@ -62,6 +59,7 @@ function ExpenseForm({ categories, onUpdateItems }: ExpenseForm) {
           name="category"
           className="expense-form-select"
         >
+          <option value=""></option>
           {categories.map((category) => {
             if (category != "All Categories") {
               return (

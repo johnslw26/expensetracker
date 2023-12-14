@@ -1,8 +1,14 @@
+import { useState } from "react";
 import "./App.css";
-import ExpenseList from "./components/ExpenseList/ExpenseList";
+import ExpenseFilter from "./components/ExpenseFilter/ExpenseFilter";
+import ExpenseForm, {
+  ExpenseFormData,
+} from "./components/ExpenseForm/ExpenseForm";
+import ExpenseList, { Expenses } from "./components/ExpenseList/ExpenseList";
+import LightBox from "./components/LightBox/LightBox";
 
 function App() {
-  let items = [
+  const items = [
     {
       id: 1,
       description: "Milk",
@@ -70,16 +76,68 @@ function App() {
       category: "Entertainment",
     },
   ];
+
+  const handleDelete = (id: number) => {
+    setExpenseList(
+      expenseList.filter((expense) => {
+        if (expense.id != id) {
+          return expense;
+        }
+      })
+    );
+  };
+
+  const categories = [
+    "All Categories",
+    "Groceries",
+    "Utilities",
+    "Entertainment",
+  ];
+
+  const [expenseList, setExpenseList] = useState<Expenses[]>(items);
+  const [isLightboxVisible, setLightboxVisible] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState("All Categories");
+  const handleUpdateItems = (expense: ExpenseFormData) => {
+    setLightboxVisible(false);
+    setExpenseList([
+      ...expenseList,
+      {
+        ...expense,
+        id: expenseList.length + 1,
+      },
+    ]);
+  };
   return (
     <>
+      <LightBox
+        isLightboxVisible={isLightboxVisible}
+        onClose={() => {
+          setLightboxVisible(false);
+        }}
+      >
+        <ExpenseForm
+          categories={categories}
+          onFormSubmit={handleUpdateItems}
+        ></ExpenseForm>
+      </LightBox>
+      <button
+        className="expense-list-show-form-button"
+        onClick={() => {
+          setLightboxVisible(true);
+        }}
+      >
+        Add New Item
+      </button>
+      <ExpenseFilter
+        categories={categories}
+        onChange={(category) => {
+          setCurrentCategory(category);
+        }}
+      />
       <ExpenseList
-        items={items}
-        categories={[
-          "All Categories",
-          "Groceries",
-          "Utilities",
-          "Entertainment",
-        ]}
+        onDelete={handleDelete}
+        items={expenseList}
+        currentCategory={currentCategory}
       />
     </>
   );

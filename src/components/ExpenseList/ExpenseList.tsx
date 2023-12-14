@@ -1,73 +1,22 @@
-import { useRef, useState } from "react";
-import { FieldValues } from "react-hook-form";
-import ExpenseFilter from "../ExpenseFilter/ExpenseFilter";
-import ExpenseForm from "../ExpenseForm/ExpenseForm";
-import LightBox from "../LightBox/LightBox";
 import "./ExpenseList.css";
 
-interface ExpenseListProps {
-  items: {
-    id: number;
-    description: string;
-    amount: number;
-    category: string;
-  }[];
-  categories: string[];
+export interface Expenses {
+  id: number;
+  description: string;
+  amount: number;
+  category: string;
 }
 
-function ExpenseList({ items, categories }: ExpenseListProps) {
-  const [currentCategory, setCurrentCategory] = useState("All Categories");
-  const [itemsArray, setItems] = useState(items);
-  const [isLightboxVisible, setLightboxVisible] = useState(false);
+interface ExpenseListProps {
+  items: Expenses[];
+  currentCategory: string;
+  onDelete: (id: number) => void;
+}
 
-  const handleUpdateItems = (data: FieldValues) => {
-    setLightboxVisible(false);
-    setItems([
-      ...itemsArray,
-      {
-        id: itemsArray.length + 1,
-        description: data.description,
-        amount: data.amount,
-        category: data.category,
-      },
-    ]);
-  };
-
-  let totalAmount = useRef(0.0);
-
-  totalAmount.current = 0.0;
-  let currencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
+function ExpenseList({ onDelete, items, currentCategory }: ExpenseListProps) {
+  if (items.length === 0) return null;
   return (
     <>
-      <LightBox
-        isLightboxVisible={isLightboxVisible}
-        onClose={() => {
-          setLightboxVisible(false);
-        }}
-      >
-        <ExpenseForm
-          categories={categories}
-          onUpdateItems={handleUpdateItems}
-        ></ExpenseForm>
-      </LightBox>
-      <button
-        className="expense-list-show-form-button"
-        onClick={() => {
-          setLightboxVisible(true);
-        }}
-      >
-        Add New Item
-      </button>
-      <ExpenseFilter
-        categories={categories}
-        onChange={(event) => {
-          console.log(event.target.value);
-          setCurrentCategory(event.target.value);
-        }}
-      />
       <table className="expense-list-table">
         <tbody>
           <tr>
@@ -76,30 +25,19 @@ function ExpenseList({ items, categories }: ExpenseListProps) {
             <th>Category</th>
             <th></th>
           </tr>
-          {itemsArray.map((item) => {
+          {items.map((item) => {
             if (
               item.category === currentCategory ||
               currentCategory == "All Categories"
             ) {
-              let totalAdd = totalAmount.current + item.amount;
-              totalAmount.current = totalAdd;
-
               return (
                 <tr key={item.id}>
                   <td key={item.description}>{item.description}</td>
-                  <td key={item.amount}>
-                    {currencyFormatter.format(item.amount)}
-                  </td>
+                  <td key={item.amount}>${item.amount.toFixed(2)}</td>
                   <td key={item.category}>{item.category}</td>
                   <td>
                     <button
-                      onClick={() => {
-                        setItems(
-                          itemsArray.filter(
-                            (currentItem) => currentItem.id != item.id
-                          )
-                        );
-                      }}
+                      onClick={() => onDelete(item.id)}
                       className="expense-list-delete-btn"
                     >
                       Delete
@@ -111,7 +49,20 @@ function ExpenseList({ items, categories }: ExpenseListProps) {
           })}
           <tr className="expense-list-total">
             <td>Total</td>
-            <td>{currencyFormatter.format(totalAmount.current)}</td>
+            <td>
+              $
+              {items
+                .reduce(
+                  (total, expense) =>
+                    total +
+                    (currentCategory === "All Categories" ||
+                    expense.category === currentCategory
+                      ? expense.amount
+                      : 0),
+                  0
+                )
+                .toFixed(2)}
+            </td>
           </tr>
         </tbody>
       </table>
